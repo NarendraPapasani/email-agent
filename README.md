@@ -10,64 +10,15 @@ An intelligent email management system that automatically categorizes emails, ex
 - **Customizable AI Prompts**: Configure how the AI analyzes and responds to your emails
 - **Real-time Analysis**: Live "Analyzing..." status with smooth UI transitions
 - **Responsive Design**: Beautiful Gmail-like interface that works on mobile and desktop
+- **AI Chat Assistant**: Chat with your emails to ask questions and get insights
 
 ## 🛠️ Tech Stack
 
-### Frontend
+- **Frontend**: React (Vite), Tailwind CSS v4, Shadcn UI
+- **Backend**: Node.js, Express, Prisma ORM, MySQL
+- **AI**: Google Gemini AI
 
-- **React** (Vite)
-- **Tailwind CSS** (v4)
-- **Shadcn UI** - Component library
-- **Lucide React** - Icons
-- **Axios** - API client
-- **Sonner** - Toast notifications
-
-### Backend
-
-- **Node.js** + **Express**
-- **Prisma** (v5) - ORM
-- **MySQL** - Database
-- **Google Gemini AI** - AI processing
-- **Dotenv** - Environment management
-
-## 📁 Project Structure
-
-```
-Email Prod/
-├── backend/
-│   ├── controllers/
-│   │   └── email.controller.js
-│   ├── routes/
-│   │   └── email.routes.js
-│   ├── utils/
-│   │   ├── genAI.js
-│   │   ├── mockEmails.js
-│   │   └── prisma.js
-│   ├── prisma/
-│   │   ├── schema.prisma
-│   │   ├── seed.js
-│   │   └── migrations/
-│   ├── app.js
-│   └── .env
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Sidebar.jsx
-│   │   │   ├── EmailList.jsx
-│   │   │   ├── EmailReadingPane.jsx
-│   │   │   ├── SettingsModal.jsx
-│   │   │   └── ui/ (Shadcn components)
-│   │   ├── lib/
-│   │   │   ├── api.js
-│   │   │   ├── helpers.js
-│   │   │   └── utils.js
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   └── .env
-└── README.md
-```
-
-## 🔧 Setup Instructions
+## 📋 Setup Instructions
 
 ### Prerequisites
 
@@ -75,197 +26,132 @@ Email Prod/
 - MySQL (v8+)
 - Google Gemini API Key
 
-### 1. Database Setup
+### 1. Clone the Repository
 
 ```bash
-# Login to MySQL
-mysql -u root -p
-
-# Create database
-CREATE DATABASE email_agent_db;
+git clone https://github.com/NarendraPapasani/email-agent.git
+cd email-agent
 ```
 
-### 2. Backend Setup
+### 2. Database Setup
+
+Create a MySQL database named `email_agent_db`.
+
+```bash
+mysql -u root -p
+CREATE DATABASE email_agent_db;
+EXIT;
+```
+
+### 3. Backend Configuration
 
 ```bash
 cd backend
-
-# Install dependencies
 npm install
 
-# Configure environment variables
-# Create .env file with:
-DATABASE_URL="mysql://root:YOUR_PASSWORD@localhost:3306/email_agent_db"
-GEMINI_API_KEY="your_gemini_api_key_here"
-PORT=8000
+# Create .env file
+cp .env.example .env
 
-# Run Prisma migrations
-npx prisma migrate dev --name init
+# Update .env with your credentials:
+# DATABASE_URL="mysql://root:password@localhost:3306/email_agent_db"
+# GEMINI_API_KEY="your_api_key"
+# PORT=7000
+```
 
-# Seed the database with mock data
-node prisma/seed.js
+### 4. Frontend Configuration
 
-# Start the server
+```bash
+cd ../frontend
+npm install
+
+# Create .env file if needed (defaults are usually fine for local dev)
+# VITE_API_URL=http://localhost:7000/api
+```
+
+## 🚀 How to Run the UI and Backend
+
+You need to run both the backend and frontend servers.
+
+**1. Start the Backend:**
+
+```bash
+cd backend
+npx prisma migrate dev --name init  # Run migrations
 npm run dev
 ```
 
-Server will run at: `http://localhost:8000`
+The backend will start on `http://localhost:7000`.
 
-### 3. Frontend Setup
+**2. Start the Frontend:**
 
 ```bash
 cd frontend
-
-# Install dependencies
-npm install
-
-# Configure environment variables
-# .env file (already configured):
-VITE_API_URL=http://localhost:8000/api
-
-# Start the development server
 npm run dev
 ```
 
-Frontend will run at: `http://localhost:5173`
+The UI will be accessible at `http://localhost:5173`.
+
+## 📥 How to Load the Mock Inbox
+
+The application comes with a seed script to populate the database with realistic mock emails for testing.
+
+To load the mock inbox:
+
+```bash
+cd backend
+node prisma/seed.js
+```
+
+_Note: This will clear existing data and load 20 sample emails with detailed content._
+
+## ⚙️ How to Configure Prompts
+
+You can customize how the AI analyzes emails and generates replies directly from the UI.
+
+1. Click the **Settings (Gear Icon)** in the top header.
+2. You will see three configuration areas:
+   - **Categorization Prompt**: Define rules for how emails are labeled (e.g., "Mark emails with 'invoice' as Finance").
+   - **Action Item Prompt**: Define how tasks should be extracted.
+   - **Auto-Reply Prompt**: Set the tone and style for generated drafts.
+3. Edit the text and click **"Save & Re-analyze"**.
+4. The system will re-process emails based on your new rules.
+
+## 💡 Usage Examples
+
+### 1. Analyzing Emails
+
+- When you open the app, click the **"Analyze Emails"** (Refresh) button in the header.
+- The AI will process unanalyzed emails, assigning categories and summaries.
+
+### 2. Viewing Action Items
+
+- Click on an email to open the reading pane.
+- Look for the **"Action Items"** section below the email body.
+- You'll see extracted tasks with checkboxes and deadlines.
+
+### 3. Generating Smart Replies
+
+- In the reading pane, click the **"Auto Draft"** button.
+- The AI will generate a context-aware reply based on the email content.
+- You can edit the draft before sending (sending functionality is a future feature).
+
+### 4. Chatting with your Email (AI Assistant)
+
+- Use the **AI Chat** sidebar on the right.
+- Ask questions like:
+  - "What is the deadline mentioned?"
+  - "Summarize this email in 3 bullets."
+  - "Is this urgent?"
+- The AI answers based on the specific email context.
 
 ## 📡 API Endpoints
 
-### Email Endpoints
-
-- `GET /api/emails` - Get all emails with analysis
-- `GET /api/emails/:id` - Get single email by ID
-- `POST /api/emails/ingest` - Trigger AI analysis for unprocessed emails
+- `GET /api/emails` - List all emails
+- `POST /api/emails/ingest` - Trigger AI analysis
+- `POST /api/emails/:id/chat` - Chat with email context
+- `POST /api/emails/reanalyze` - Re-run analysis on all emails
 - `POST /api/emails/:id/generate-draft` - Generate reply draft
-- `POST /api/emails/:id/regenerate-draft` - Regenerate reply draft
-
-### Prompt Endpoints
-
-- `GET /api/prompts` - Get all AI prompts
-- `POST /api/prompts/update` - Update AI prompts configuration
-
-## 🎯 Usage
-
-1. **Start Both Servers**
-
-   ```bash
-   # Terminal 1 - Backend
-   cd backend && npm run dev
-
-   # Terminal 2 - Frontend
-   cd frontend && npm run dev
-   ```
-
-2. **Open the App**
-
-   - Navigate to `http://localhost:5173`
-
-3. **Sync Emails**
-
-   - Click the "Sync Emails" button in the sidebar
-   - Watch as AI analyzes emails in real-time
-
-4. **Read & Respond**
-
-   - Click on any email to read
-   - View AI-generated summary and action items
-   - Generate smart reply drafts
-
-5. **Customize AI Behavior**
-   - Click "Settings" in sidebar
-   - Configure categorization rules
-   - Define action item extraction logic
-   - Set auto-reply persona
-
-## 🗄️ Database Schema
-
-```prisma
-model Email {
-  id         Int       @id @default(autoincrement())
-  from       String
-  subject    String
-  body       String    @db.Text
-  recived_at DateTime
-  createdAt  DateTime  @default(now())
-  analysis   EmailAnalysis?
-}
-
-model EmailAnalysis {
-  id            Int      @id @default(autoincrement())
-  emailId       Int      @unique
-  category      String
-  summary       String   @db.Text
-  actionItems   Json
-  responseDraft String?  @db.Text
-  createdAt     DateTime @default(now())
-  email         Email    @relation(...)
-}
-
-model Prompt {
-  id        Int        @id @default(autoincrement())
-  type      PromptType @unique
-  content   String     @db.Text
-  createdAt DateTime   @default(now())
-}
-```
-
-## 🎨 Design Philosophy
-
-- **"Render First, Enrich Later"** - UI loads immediately, AI enriches content
-- **Clean & Minimal** - Inspired by Linear and Superhuman
-- **Smooth Transitions** - All interactions have 200ms ease-in-out transitions
-- **Mobile Responsive** - Full mobile support with hamburger menu
-
-## 🔐 Environment Variables
-
-### Backend (.env)
-
-```env
-DATABASE_URL="mysql://root:password@localhost:3306/email_agent_db"
-GEMINI_API_KEY="your_gemini_api_key"
-PORT=8000
-```
-
-### Frontend (.env)
-
-```env
-VITE_API_URL=http://localhost:8000/api
-```
-
-## 🐛 Troubleshooting
-
-### Backend Issues
-
-- **Prisma Client not found**: Run `npx prisma generate`
-- **Database connection failed**: Check MySQL is running and credentials are correct
-- **Gemini API errors**: Verify your API key is valid
-
-### Frontend Issues
-
-- **API calls failing**: Ensure backend is running on port 8000
-- **Components not rendering**: Check all dependencies are installed
-
-## 📝 Notes
-
-- The app comes with 20 pre-seeded mock emails for testing
-- AI analysis processes 5 emails at a time during "Sync"
-- All AI responses are cached in the database for performance
-- Custom prompts persist across sessions
-
-## 🚀 Future Enhancements
-
-- [ ] Email sending functionality
-- [ ] Multiple inbox support
-- [ ] Email search and filters
-- [ ] Priority inbox view
-- [ ] Email threading
-- [ ] Dark mode
-- [ ] Calendar integration
 
 ## 📄 License
 
 MIT
-
----
-
-Built with ❤️ using React, Prisma, and Google Gemini AI
