@@ -14,7 +14,15 @@ const PORT = process.env.PORT || 7000;
 connectAI();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://guileless-tiramisu-89bccf.netlify.app",
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Routes
