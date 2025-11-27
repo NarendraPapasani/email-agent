@@ -18,7 +18,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://guileless-tiramisu-89bccf.netlify.app",
+      "https://emailagents.netlify.app",
     ],
     credentials: true,
   })
