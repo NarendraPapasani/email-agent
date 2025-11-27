@@ -41,32 +41,18 @@ export default function Header({ onRefresh, isRefreshing }) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Save prompts
+      // Save prompts and clear existing analysis
       await promptAPI.update(prompts);
 
-      // Re-analyze all emails with new prompts (with rate limiting)
-      const result = await emailAPI.reanalyze();
-
-      console.log("Re-analysis result:", result.data);
-
-      // Refresh email list
+      // Refresh email list to reflect cleared analysis
       if (onRefresh) {
         await onRefresh();
       }
 
       setIsOpen(false);
-
-      // Show success message if available
-      if (result.data.failed > 0) {
-        alert(
-          `Re-analysis complete!\nProcessed: ${result.data.processed}/${result.data.total}\nFailed: ${result.data.failed}\n\nNote: This may take a while due to API rate limits (5s delay between emails).`
-        );
-      }
+      window.location.reload();
     } catch (error) {
-      console.error("Failed to save prompts and re-analyze:", error);
-      alert(
-        "Re-analysis may be in progress. This takes time due to rate limits.\n\nPlease wait and refresh the page in a few minutes."
-      );
+      console.error("Failed to save prompts:", error);
     } finally {
       setIsSaving(false);
     }
@@ -74,14 +60,14 @@ export default function Header({ onRefresh, isRefreshing }) {
 
   return (
     <header className="bg-blue-500 shadow-lg">
-      <div className="px-6 py-4 flex items-center justify-between">
+      <div className="px-4 py-4 flex items-center justify-between">
         {/* Logo and Title */}
         <div className="flex items-center gap-3">
           <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2">
             <Mail className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">
+            <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
               AgentInbox
             </h1>
             {/* <p className="text-xs text-blue-100">AI-Powered Email Assistant</p> */}
@@ -89,7 +75,7 @@ export default function Header({ onRefresh, isRefreshing }) {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <Button
             variant="ghost"
             size="sm"
@@ -98,9 +84,13 @@ export default function Header({ onRefresh, isRefreshing }) {
             className="text-white cursor-pointer bg-white/20 bg:hover:bg-white/30"
           >
             <RefreshCw
-              className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
+              className={`h-4 w-4 ${
+                isRefreshing ? "animate-spin" : ""
+              } md:mr-2`}
             />
-            {isRefreshing ? "Analyzing..." : "Analyze Emails"}
+            <span className="hidden md:inline">
+              {isRefreshing ? "Analyzing..." : "Analyze Emails"}
+            </span>
           </Button>
 
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -182,10 +172,10 @@ export default function Header({ onRefresh, isRefreshing }) {
                     {isSaving ? (
                       <>
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Re-analyzing All Emails...
+                        Saving...
                       </>
                     ) : (
-                      "Save & Re-analyze"
+                      "Save & Clear Analysis"
                     )}
                   </Button>
                 </div>

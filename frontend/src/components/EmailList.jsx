@@ -5,7 +5,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { formatRelativeTime, getCategoryColor } from "@/lib/helpers";
 
-export default function EmailList({ emails, selectedEmail, onSelectEmail }) {
+export default function EmailList({
+  emails,
+  selectedEmail,
+  onSelectEmail,
+  loading,
+}) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredEmails = emails.filter(
@@ -16,9 +21,9 @@ export default function EmailList({ emails, selectedEmail, onSelectEmail }) {
   );
 
   return (
-    <div className="w-1/4 bg-white border-r border-slate-200 flex flex-col h-full">
+    <div className="md:w-1/4 w-full bg-white border-r md:border-r border-slate-200 flex flex-col h-full">
       {/* Search Header */}
-      <div className="p-4 border-b border-slate-200">
+      <div className="p-2 border-b border-slate-200">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
@@ -34,7 +39,33 @@ export default function EmailList({ emails, selectedEmail, onSelectEmail }) {
       {/* Email List */}
       <ScrollArea className="flex-1">
         <div className="divide-y divide-slate-100">
-          {filteredEmails.length === 0 ? (
+          {loading ? (
+            <div className="p-4 space-y-6">
+              <div className="text-center p-4 bg-blue-50 text-blue-700 rounded-lg text-sm mb-2">
+                <div className="flex justify-center mb-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
+                </div>
+                <p className="font-medium">Loading your inbox...</p>
+                <p className="text-xs mt-1 opacity-80">
+                  Please wait, it will take about 30 seconds to load.
+                </p>
+              </div>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="space-y-3 animate-pulse px-2">
+                  <div className="flex justify-between items-center">
+                    <div className="h-4 bg-slate-200 rounded w-1/3"></div>
+                    <div className="h-3 bg-slate-200 rounded w-1/5"></div>
+                  </div>
+                  <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                  <div className="space-y-2">
+                    <div className="h-3 bg-slate-200 rounded w-full"></div>
+                    <div className="h-3 bg-slate-200 rounded w-5/6"></div>
+                  </div>
+                  <div className="h-5 bg-slate-200 rounded w-1/4 mt-2"></div>
+                </div>
+              ))}
+            </div>
+          ) : filteredEmails.length === 0 ? (
             <div className="p-8 text-center text-slate-400">
               <Mail className="h-12 w-12 mx-auto mb-3 opacity-50" />
               <p className="text-sm">No emails found</p>

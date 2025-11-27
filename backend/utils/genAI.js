@@ -13,7 +13,7 @@ const connectAI = () => {
     const model = gen_ai.getGenerativeModel({
       model: "gemini-2.0-flash",
     });
-    console.log("✅ Gemini AI connected successfully");
+    console.log("Gemini AI connected successfully");
     return model;
   } catch (error) {
     console.log(error);

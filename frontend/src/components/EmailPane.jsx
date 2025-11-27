@@ -1,9 +1,17 @@
-import { useState, useEffect } from "react";
-import { Mail, Sparkles, ChevronDown, Reply, ListTodo } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import {
+  Mail,
+  Sparkles,
+  ChevronDown,
+  Reply,
+  ListTodo,
+  ArrowLeft,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,41 +23,29 @@ import { getCategoryColor, formatRelativeTime } from "@/lib/helpers";
 import { emailAPI } from "@/lib/api";
 import AIChat from "./AIChat";
 
-export default function EmailPane({ email, onAnalyze }) {
+export default function EmailPane({ email, onAnalyze, onBack, error }) {
   const [summary, setSummary] = useState("");
-  const [showSummary, setShowSummary] = useState(false);
-  const [loadingSummary, setLoadingSummary] = useState(false);
   const [draft, setDraft] = useState("");
   const [loadingDraft, setLoadingDraft] = useState(false);
   const [actionItems, setActionItems] = useState([]);
+  const analyzingRef = useRef(null);
 
   useEffect(() => {
     if (email) {
-      setSummary("");
-      setShowSummary(false);
-      setDraft("");
+      setSummary(email.analysis?.summary || "");
+      setDraft(email.analysis?.responseDraft || "");
       setActionItems(
         email.analysis?.actionItems
           ? JSON.parse(email.analysis.actionItems)
           : []
       );
 
-      // Trigger analysis if email hasn't been analyzed yet
-      if (!email.analysis) {
+      if (!email.analysis && analyzingRef.current !== email.id) {
+        analyzingRef.current = email.id;
         onAnalyze();
       }
     }
   }, [email]);
-
-  const handleGetSummary = async () => {
-    if (!email.analysis?.summary) return;
-    setLoadingSummary(true);
-    setTimeout(() => {
-      setSummary(email.analysis.summary);
-      setShowSummary(true);
-      setLoadingSummary(false);
-    }, 500);
-  };
 
   const handleGenerateDraft = async () => {
     setLoadingDraft(true);
@@ -86,22 +82,24 @@ export default function EmailPane({ email, onAnalyze }) {
       {/* Main Email Content (75% of the remaining space) */}
       <div className="flex-[3] flex flex-col bg-white">
         {/* Email Header - Outlook Style */}
-        <div className="p-6 border-b border-slate-200 bg-white">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-slate-900 mb-3">
-                {email.subject}
-              </h1>
-              {email.analysis && (
-                <Badge
-                  variant="outline"
-                  className={`${getCategoryColor(
-                    email.analysis.category
-                  )} ring-1`}
+        <div className="p-3 border-b border-slate-200 bg-white">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center gap-3">
+              {onBack && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onBack}
+                  className="md:hidden"
                 >
-                  {email.analysis.category}
-                </Badge>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
               )}
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold text-slate-900 mb-1">
+                  {email.subject}
+                </h1>
+              </div>
             </div>
           </div>
 
@@ -115,11 +113,57 @@ export default function EmailPane({ email, onAnalyze }) {
                 {formatRelativeTime(email.recived_at)}
               </p>
             </div>
+            {email.analysis && (
+              <Badge
+                variant="outline"
+                className={`${getCategoryColor(
+                  email.analysis.category
+                )} ring-1`}
+              >
+                {email.analysis.category}
+              </Badge>
+            )}
           </div>
         </div>
 
         {/* Email Body */}
-        <ScrollArea className="flex-1 p-6">
+        <ScrollArea className="flex-1 p-3">
+          {/* Error Display */}
+          {error ? (
+            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
+              <div className="h-2 w-2 rounded-full bg-red-500" />
+              {error}
+            </div>
+          ) : summary ? (
+            <div className="mb-6 p-2 bg-indigo-50 border border-indigo-100 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-6 w-6 rounded-full bg-gradient-to-br from-orange-700 to-indigo-600 flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
+                <h3 className="font-semibold text-indigo-900">AI Summary</h3>
+              </div>
+              <p className="text-sm text-slate-700 leading-relaxed">
+                {summary}
+              </p>
+            </div>
+          ) : (
+            <div className="mb-6 p-2 bg-slate-50 border border-slate-100 rounded-lg animate-pulse">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-6 w-6 rounded-full bg-gradient-to-br from-orange-700 to-indigo-600 flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-sm font-medium text-slate-500">
+                  Generating AI Summary...
+                </span>
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 bg-slate-200 rounded w-full"></div>
+                <div className="h-3 bg-slate-200 rounded w-5/6"></div>
+                <div className="h-3 bg-slate-200 rounded w-4/6"></div>
+              </div>
+            </div>
+          )}
+
           <div className="prose prose-slate max-w-none">
             <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
               {email.body}
@@ -130,7 +174,7 @@ export default function EmailPane({ email, onAnalyze }) {
           <div className="mt-8 flex gap-3">
             <Button
               variant="default"
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-green-600 hover:bg-green-700 text-white cursor-pointer"
             >
               <Reply className="h-4 w-4 mr-2" />
               Reply
@@ -139,9 +183,16 @@ export default function EmailPane({ email, onAnalyze }) {
               variant="outline"
               onClick={handleGenerateDraft}
               disabled={loadingDraft}
+              className="cursor-pointer"
             >
-              <Sparkles className="h-4 w-4 mr-2" />
-              {loadingDraft ? "Generating..." : "Auto Draft"}
+              <div className="h-6 w-6 rounded-full bg-gradient-to-br from-orange-700 to-indigo-600 flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+              {loadingDraft
+                ? "Generating..."
+                : draft
+                ? "Regenerate"
+                : "Auto Draft"}
             </Button>
           </div>
 
@@ -149,7 +200,9 @@ export default function EmailPane({ email, onAnalyze }) {
           {draft && (
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="h-4 w-4 text-blue-600" />
+                <div className="h-6 w-6 rounded-full bg-gradient-to-br from-orange-700 to-indigo-600 flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
                 <h3 className="font-semibold text-blue-900">
                   AI Generated Draft
                 </h3>
@@ -196,39 +249,27 @@ export default function EmailPane({ email, onAnalyze }) {
               </div>
             </div>
           )}
-
-          {/* Summary Dropdown */}
-          <DropdownMenu open={showSummary} onOpenChange={setShowSummary}>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="mt-6 w-full"
-                onClick={!showSummary ? handleGetSummary : undefined}
-                disabled={loadingSummary || !email.analysis}
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                {loadingSummary
-                  ? "Loading..."
-                  : showSummary
-                  ? "Summary"
-                  : "Get AI Summary"}
-                <ChevronDown className="h-4 w-4 ml-auto" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-[600px] p-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold text-slate-900">Email Summary</h4>
-                <p className="text-sm text-slate-700 leading-relaxed">
-                  {summary || email.analysis?.summary || "No summary available"}
-                </p>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </ScrollArea>
       </div>
 
-      {/* AI Chat Sidebar */}
-      <AIChat email={email} />
+      {/* AI Chat Sidebar (desktop) and Modal (mobile) */}
+      <div className="hidden md:block">
+        <AIChat email={email} />
+      </div>
+
+      {/* Mobile Chat Modal Trigger */}
+      <div className="md:hidden">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="fixed bottom-4 right-4 z-50 bg-indigo-600 text-white rounded-full p-3 shadow-lg">
+              Chat
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="w-full h-full max-w-none p-0">
+            <AIChat email={email} />
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

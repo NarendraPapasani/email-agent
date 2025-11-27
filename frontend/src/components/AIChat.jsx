@@ -5,26 +5,40 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { emailAPI } from "@/lib/api";
 
-const SUGGESTIONS = [
-  "What are the key points?",
-  "What should I prioritize?",
-  "How urgent is this?",
-  "What's the best response approach?",
-];
-
 export default function AIChat({ email }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   useEffect(() => {
     // Reset chat when email changes
     if (email) {
       setMessages([]);
       setInput("");
+      fetchSuggestions(email.id);
     }
   }, [email?.id]);
+
+  const fetchSuggestions = async (emailId) => {
+    setLoadingSuggestions(true);
+    try {
+      const response = await emailAPI.getSuggestions(emailId);
+      setSuggestions(response.data.suggestions || []);
+    } catch (error) {
+      console.error("Failed to fetch suggestions:", error);
+      setSuggestions([
+        "Summarize this email",
+        "What are the action items?",
+        "How urgent is this?",
+        "Draft a polite reply",
+      ]);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
 
   useEffect(() => {
     // Auto scroll to bottom
@@ -88,7 +102,7 @@ export default function AIChat({ email }) {
   }
 
   return (
-    <div className="w-[400px] border-l border-slate-200 bg-gradient-to-b from-slate-50 to-white flex flex-col">
+    <div className="w-full md:w-[370px] md:border-l border-slate-200 bg-gradient-to-b from-slate-50 to-white flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-slate-200 bg-white">
         <div className="flex items-center gap-2">
@@ -110,18 +124,26 @@ export default function AIChat({ email }) {
           <p className="text-xs font-medium text-slate-700 mb-3">
             Quick questions:
           </p>
-          {SUGGESTIONS.map((suggestion, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              size="sm"
-              className="w-full justify-start text-xs h-auto py-2 px-3 text-left"
-              onClick={() => handleSuggestionClick(suggestion)}
-              disabled={loading}
-            >
-              {suggestion}
-            </Button>
-          ))}
+          {loadingSuggestions ? (
+            <div className="space-y-2 animate-pulse">
+              <div className="h-8 bg-slate-100 rounded w-full"></div>
+              <div className="h-8 bg-slate-100 rounded w-3/4"></div>
+              <div className="h-8 bg-slate-100 rounded w-5/6"></div>
+            </div>
+          ) : (
+            suggestions.map((suggestion, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                size="sm"
+                className="w-full justify-start text-xs h-auto py-2 px-3 text-left whitespace-normal break-words"
+                onClick={() => handleSuggestionClick(suggestion)}
+                disabled={loading}
+              >
+                {suggestion}
+              </Button>
+            ))
+          )}
         </div>
       )}
 
