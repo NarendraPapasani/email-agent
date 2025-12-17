@@ -1,22 +1,24 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const connectAI = () => {
   try {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is not defined in environment variables");
+    if (!process.env.GROQ_API_KEY) {
+      throw new Error("GROQ_API_KEY is not defined in environment variables");
     }
 
-    const gen_ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = gen_ai.getGenerativeModel({
-      model: "gemini-2.0-flash-lite",
+    const groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
     });
-    console.log("Gemini AI connected successfully");
-    return model;
+
+    console.log("Groq AI (Llama 3.3) connected successfully");
+    
+    return groq;
   } catch (error) {
-    console.log(error);
+    console.error("Failed to connect to Groq:", error.message);
+    return null;
   }
 };
 
