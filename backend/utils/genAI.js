@@ -11,7 +11,7 @@ const connectAI = () => {
 
     const gen_ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = gen_ai.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.0-flash-lite",
     });
     console.log("Gemini AI connected successfully");
     return model;
