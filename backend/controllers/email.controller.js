@@ -1,5 +1,5 @@
 import prisma from "../utils/prisma.js";
-import connectAI from "../utils/connectAI.js";
+import connectAI from "../utils/genAI.js";
 import dotenv from "dotenv";
 
 dotenv.config();
