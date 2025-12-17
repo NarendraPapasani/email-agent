@@ -14,7 +14,7 @@ const connectAI = () => {
     });
 
     console.log("Groq AI (Llama 3.3) connected successfully");
-    
+
     return groq;
   } catch (error) {
     console.error("Failed to connect to Groq:", error.message);

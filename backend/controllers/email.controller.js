@@ -9,16 +9,16 @@ const AI_MODEL = "llama-3.3-70b-versatile";
 
 const getAllEmails = async (req, res) => {
   try {
-    console.log("📧 Fetching all emails...");
+    console.log("Fetching all emails...");
     const emails = await prisma.email.findMany({
       orderBy: { recived_at: "desc" },
       include: { analysis: true },
     });
 
-    console.log(`✅ Found ${emails.length} emails`);
+    console.log(`Found ${emails.length} emails`);
     res.status(200).json(emails);
   } catch (error) {
-    console.error("❌ Error fetching emails:", error);
+    console.error("Error fetching emails:", error);
     res.status(500).json({ error: "Failed to fetch emails" });
   }
 };
@@ -64,8 +64,12 @@ const emailIngestion = async (req, res) => {
     }
 
     const prompts = await prisma.prompt.findMany();
-    const catPrompt = prompts.find((p) => p.type === "categorization")?.content;
-    const actionPrompt = prompts.find((p) => p.type === "action_item")?.content;
+    const catPrompt =
+      prompts.find((p) => p.type === "categorization")?.content ||
+      "Categorize this email";
+    const actionPrompt =
+      prompts.find((p) => p.type === "action_item")?.content ||
+      "Extract action items";
 
     let processedCount = 0;
     let failedCount = 0;
@@ -132,18 +136,24 @@ const emailIngestion = async (req, res) => {
 
           processedCount++;
           success = true;
-          console.log(`✅ Analyzed email ${processedCount}/${unreadEmails.length}`);
+          console.log(
+            `Analyzed email ${processedCount}/${unreadEmails.length}`
+          );
 
           if (processedCount < unreadEmails.length) {
-            await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
+            await new Promise((resolve) =>
+              setTimeout(resolve, DELAY_BETWEEN_REQUESTS)
+            );
           }
         } catch (error) {
           retries++;
           if (error.status === 429) {
-            console.log(`⏳ Groq Rate limit hit. Retry ${retries}/${MAX_RETRIES}...`);
+            console.log(
+              `Groq Rate limit hit. Retry ${retries}/${MAX_RETRIES}...`
+            );
             await new Promise((resolve) => setTimeout(resolve, 5000));
           } else {
-            console.error(`❌ Error on email ${email.id}:`, error.message);
+            console.error(`Error on email ${email.id}:`, error.message);
             if (retries >= MAX_RETRIES) {
               failedCount++;
               break;
@@ -187,24 +197,37 @@ const updatePrompts = async (req, res) => {
 const getResponseDraft = async (req, res) => {
   try {
     const { id } = req.params;
-    const email = await prisma.email.findUnique({ where: { id: parseInt(id) } });
-    const promptData = await prisma.prompt.findUnique({ where: { type: "auto_reply" } });
+    const email = await prisma.email.findUnique({
+      where: { id: parseInt(id) },
+    });
+    const promptData = await prisma.prompt.findUnique({
+      where: { type: "auto_reply" },
+    });
+    const promptContent =
+      promptData?.content || "Draft a professional reply to this email.";
 
     if (!email) return res.status(404).json({ error: "Email not found" });
 
     // Generate Draft
     const draftResult = await groq.chat.completions.create({
-      messages: [{ 
-        role: "user", 
-        content: `Incoming Email: "${email.body}"\nTASK: ${promptData.content}\nOutput just the reply body.` 
-      }],
+      messages: [
+        {
+          role: "user",
+          content: `Incoming Email: "${email.body}"\nTASK: ${promptContent}\nOutput just the reply body.`,
+        },
+      ],
       model: AI_MODEL,
     });
     const draftText = draftResult.choices[0]?.message?.content;
 
     // Generate Summary
     const summaryResult = await groq.chat.completions.create({
-      messages: [{ role: "user", content: `Summarize this email in 2 sentences: "${email.body}"` }],
+      messages: [
+        {
+          role: "user",
+          content: `Summarize this email in 2 sentences: "${email.body}"`,
+        },
+      ],
       model: AI_MODEL,
     });
     const summaryText = summaryResult.choices[0]?.message?.content;
@@ -231,16 +254,24 @@ const getResponseDraft = async (req, res) => {
 const regenerateDraft = async (req, res) => {
   try {
     const { id } = req.params;
-    const email = await prisma.email.findUnique({ where: { id: parseInt(id) } });
-    const promptData = await prisma.prompt.findUnique({ where: { type: "auto_reply" } });
+    const email = await prisma.email.findUnique({
+      where: { id: parseInt(id) },
+    });
+    const promptData = await prisma.prompt.findUnique({
+      where: { type: "auto_reply" },
+    });
+    const promptContent =
+      promptData?.content || "Draft a professional reply to this email.";
 
     if (!email) return res.status(404).json({ error: "Email not found" });
 
     const result = await groq.chat.completions.create({
-      messages: [{ 
-        role: "user", 
-        content: `Make this reply different from before.\nEmail: "${email.body}"\nTASK: ${promptData.content}` 
-      }],
+      messages: [
+        {
+          role: "user",
+          content: `Make this reply different from before.\nEmail: "${email.body}"\nTASK: ${promptContent}`,
+        },
+      ],
       model: AI_MODEL,
     });
 
@@ -275,20 +306,25 @@ const chatWithEmail = async (req, res) => {
     const result = await groq.chat.completions.create({
       messages: [
         { role: "system", content: "You are a helpful email assistant." },
-        { role: "user", content: `Context: ${context}\n\nQuestion: ${message}` }
+        {
+          role: "user",
+          content: `Context: ${context}\n\nQuestion: ${message}`,
+        },
       ],
       model: AI_MODEL,
     });
 
     res.status(200).json({ response: result.choices[0]?.message?.content });
   } catch (error) {
-    console.error("❌ Error in chat:", error);
+    console.error("Error in chat:", error);
     res.status(500).json({ error: "Chat failed" });
   }
 };
 
 const reanalyzeAllEmails = async (req, res) => {
-    res.status(200).json({ message: "Re-analysis triggered (logic same as ingestion)" });
+  res
+    .status(200)
+    .json({ message: "Re-analysis triggered (logic same as ingestion)" });
 };
 
 const analyzeEmail = async (req, res) => {
@@ -300,19 +336,77 @@ const analyzeEmail = async (req, res) => {
     });
 
     if (!email) return res.status(404).json({ error: "Email not found" });
-    if (email.analysis) return res.status(200).json(email);
+
+    // If analysis exists, return the full email with analysis
+    if (email.analysis) {
+      return res.status(200).json(email);
+    }
 
     const prompts = await prisma.prompt.findMany();
-    const catPrompt = prompts.find((p) => p.type === "categorization")?.content;
-    
-    const result = await groq.chat.completions.create({
-      messages: [{ role: "user", content: `Categorize this: ${email.body}\nRule: ${catPrompt}` }],
+    const catPrompt =
+      prompts.find((p) => p.type === "categorization")?.content ||
+      "Categorize this email";
+    const actionPrompt =
+      prompts.find((p) => p.type === "action_item")?.content ||
+      "Extract action items";
+
+    const aiPrompt = `
+      Analyze this email based on these rules:
+      1. Categorization Rule: "${catPrompt}"
+      2. Action Item Rule: "${actionPrompt}"
+      
+      Email Content:
+      Subject: ${email.subject}
+      Body: ${email.body}
+      
+      STRICT OUTPUT FORMAT (JSON ONLY):
+      {
+        "category": "String",
+        "summary": "String (2-3 sentences, detailed overview)",
+        "action_items": [{"task": "String", "deadline": "String"}]
+      }
+    `;
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: aiPrompt }],
       model: AI_MODEL,
+      response_format: { type: "json_object" },
     });
 
-    res.status(200).json({ message: "Analysis complete" });
+    const text = chatCompletion.choices[0]?.message?.content.trim();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("JSON Parse Error in analyzeEmail:", e);
+      data = {
+        category: "General",
+        summary: "Could not parse AI response.",
+        action_items: [],
+      };
+    }
+
+    // Save to DB
+    await prisma.emailAnalysis.create({
+      data: {
+        emailId: email.id,
+        category: data.category,
+        summary: data.summary,
+        actionItems: JSON.stringify(data.action_items || []),
+        responseDraft: null,
+      },
+    });
+
+    // Return the full email object with analysis
+    const updatedEmail = await prisma.email.findUnique({
+      where: { id: email.id },
+      include: { analysis: true },
+    });
+
+    res.status(200).json(updatedEmail);
   } catch (error) {
-    res.status(500).json({ error: "Failed" });
+    console.error("Analyze error:", error);
+    res.status(500).json({ error: "Failed to analyze email" });
   }
 };
 
@@ -321,18 +415,49 @@ const getChatSuggestions = async (req, res) => {
     const { id } = req.params;
     const email = await prisma.email.findUnique({
       where: { id: parseInt(id) },
-      include: { analysis: true },
     });
 
+    if (!email) return res.status(404).json({ error: "Email not found" });
+
     const result = await groq.chat.completions.create({
-      messages: [{ role: "user", content: `Give 4 chat suggestions for this email: ${email.body}` }],
+      messages: [
+        {
+          role: "user",
+          content: `
+            Read this email and provide 4 short, relevant follow-up questions or chat suggestions that a user might ask about this email.
+            
+            Email: "${email.body}"
+            
+            Output JSON format:
+            {
+              "suggestions": ["suggestion 1", "suggestion 2", "suggestion 3", "suggestion 4"]
+            }
+          `,
+        },
+      ],
       model: AI_MODEL,
       response_format: { type: "json_object" },
     });
 
-    res.status(200).json({ suggestions: JSON.parse(result.choices[0]?.message?.content) });
+    const content = result.choices[0]?.message?.content;
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch (e) {
+      parsed = {
+        suggestions: [
+          "Summarize this email",
+          "What are the action items?",
+          "Draft a reply",
+          "Who is this from?",
+        ],
+      };
+    }
+
+    res.status(200).json(parsed);
   } catch (error) {
-    res.status(500).json({ error: "Failed suggestions" });
+    console.error("Suggestions error:", error);
+    res.status(500).json({ error: "Failed to get suggestions" });
   }
 };
 

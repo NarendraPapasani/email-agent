@@ -29,6 +29,7 @@ export default function EmailPane({ email, onAnalyze, onBack, error }) {
   const [loadingDraft, setLoadingDraft] = useState(false);
   const [actionItems, setActionItems] = useState([]);
   const analyzingRef = useRef(null);
+  console.log(summary, draft, actionItems);
 
   useEffect(() => {
     if (email) {

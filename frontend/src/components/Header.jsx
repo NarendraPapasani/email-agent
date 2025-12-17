@@ -59,7 +59,7 @@ export default function Header({ onRefresh, isRefreshing }) {
   };
 
   return (
-    <header className="bg-blue-500 shadow-lg">
+    <header className="bg-gray-950 shadow-lg">
       <div className="px-4 py-4 flex items-center justify-between">
         {/* Logo and Title */}
         <div className="flex items-center gap-3">
@@ -67,16 +67,13 @@ export default function Header({ onRefresh, isRefreshing }) {
             <Mail className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
-              AgentInbox
-            </h1>
             {/* <p className="text-xs text-blue-100">AI-Powered Email Assistant</p> */}
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-2 md:gap-3">
-          <Button
+          {/* <Button
             variant="ghost"
             size="sm"
             onClick={onRefresh}
@@ -91,7 +88,7 @@ export default function Header({ onRefresh, isRefreshing }) {
             <span className="hidden md:inline">
               {isRefreshing ? "Analyzing..." : "Analyze Emails"}
             </span>
-          </Button>
+          </Button> */}
 
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>

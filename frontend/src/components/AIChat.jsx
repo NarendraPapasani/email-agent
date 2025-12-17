@@ -26,6 +26,7 @@ export default function AIChat({ email }) {
     setLoadingSuggestions(true);
     try {
       const response = await emailAPI.getSuggestions(emailId);
+      console.log("Fetched suggestions:", response.data);
       setSuggestions(response.data.suggestions || []);
     } catch (error) {
       console.error("Failed to fetch suggestions:", error);
