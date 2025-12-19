@@ -1,9 +1,10 @@
 # 📧 AgentInbox - AI-Powered Email Productivity Agent
 
-An intelligent email management system that automatically categorizes emails, extracts action items, and generates smart reply drafts using Google's Gemini AI.
+An intelligent email management system that automatically categorizes emails, extracts action items, and generates smart reply drafts using **Groq (Llama 3.3)**.
 
 ## 🚀 Features
 
+- **Mobile-First Design**: Fully responsive interface with a dedicated mobile layout, full-screen reading pane, and modal-based AI chat.
 - **Smart Email Categorization**: Automatically categorizes emails (Important, Urgent, Spam, Newsletter, etc.)
 - **Action Item Extraction**: AI identifies tasks and deadlines from email content
 - **Smart Reply Generation**: Generate professional email responses with one click
@@ -15,8 +16,8 @@ An intelligent email management system that automatically categorizes emails, ex
 ## 🛠️ Tech Stack
 
 - **Frontend**: React (Vite), Tailwind CSS v4, Shadcn UI
-- **Backend**: Node.js, Express, Prisma ORM, MySQL
-- **AI**: Google Gemini AI
+- **Backend**: Node.js, Express, Prisma ORM, MySQL (TiDB)
+- **AI**: Groq (Llama 3.3-70b-versatile)
 
 ## 📋 Setup Instructions
 
@@ -24,7 +25,7 @@ An intelligent email management system that automatically categorizes emails, ex
 
 - Node.js (v18+)
 - MySQL (v8+)
-- Google Gemini API Key
+- Groq API Key
 
 ### 1. Clone the Repository
 
@@ -54,7 +55,7 @@ cp .env.example .env
 
 # Update .env with your credentials:
 # DATABASE_URL="mysql://root:password@localhost:3306/email_agent_db"
-# GEMINI_API_KEY="your_api_key"
+# GROQ_API_KEY="your_groq_api_key"
 # PORT=7000
 ```
 
@@ -64,8 +65,8 @@ cp .env.example .env
 cd ../frontend
 npm install
 
-# Create .env file if needed (defaults are usually fine for local dev)
-# VITE_API_URL=http://localhost:7000/api
+# Create .env file
+# VITE_API_BASE_URL="http://localhost:7000/api"
 ```
 
 ## 🚀 How to Run the UI and Backend
